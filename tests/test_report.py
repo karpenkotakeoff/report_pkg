@@ -1,4 +1,4 @@
-# import pytest
+import pytest
 import argparse
 import report_pkg
 from unittest import mock
@@ -33,26 +33,19 @@ def test_typical_build_report():
         assert report_pkg.build_report("data") == report
 
 
-def test_print_report_asc():
-    with mock.patch('builtins.print') as patched_print:
-        report_pkg.print_report(report, None, False)
-        assert patched_print.call_args_list == print_asc
-
-
-def test_print_report_desc():
-    with mock.patch('builtins.print') as patched_print:
-        report_pkg.print_report(report, None, True)
-        assert patched_print.call_args_list == print_asc[::-1]
-
-
-def test_print_report_driver():
-    with mock.patch('builtins.print') as patched_print:
-        report_pkg.print_report(report, "Sebastian Vettel", False)
-        assert patched_print.call_args_list == print_vettel
-
-
 def test_argparse():
     with mock.patch("argparse.ArgumentParser.parse_args",
                     return_value=argparse.Namespace(asc=True, desc=False, driver=None, file="data")):
         res = report_pkg.input_from_argparse()
         assert res == argparse.Namespace(asc=True, desc=False, driver=None, file="data")
+
+
+@pytest.mark.parametrize("params, expected", [
+    ((report, None, False,), print_asc),
+    ((report, None, True,), print_asc[::-1]),
+    ((report, "Sebastian Vettel", False), print_vettel),
+])
+def test_print_report(params, expected):
+    with mock.patch('builtins.print') as patched_print:
+        report_pkg.print_report(*params)
+        assert patched_print.call_args_list == expected

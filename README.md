@@ -40,7 +40,7 @@ if __name__ == "__main__":
 ```
 Now, you can use CLI with few parameters
 
-Run this command from the same directory where ```example.py``` is located for a showing list of drivers and optional 
+Run this command from the same directory where ```example.py``` is located for a showing list of drivers and optional
 order (default order is asc)
 ```
 python example.py --files <folder_path> [--asc | --desc]

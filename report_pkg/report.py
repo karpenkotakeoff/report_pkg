@@ -1,74 +1,95 @@
 import datetime
 import argparse
 import sys
+import os
+from dataclasses import dataclass
 
 
-def build_report(folder, driver=None, desc=False):
+@dataclass
+class PilotStats:
+    position: int
+    name: str
+    team: str
+    fastest_lap: str
+
+
+abbreviations = "abbreviations.txt"
+end = "end.log"
+start = "start.log"
+
+
+def build_report(folder):
     """
-    Take params and returned report of qualification or driver statistic
+    Take params and returned report of qualification
 
     :param folder: folder path
-    :param driver: name of driver whose statistic you wish to show
-    :param desc: order descending
     :return: report list
     """
     pilots = {}
     lap_times = {}
     report = []
-    with open(f"{folder}/abbreviations.txt") as abb:
-        for line in abb.read().split("\n"):
-            split_line = line.split("_")
-            abbreviation = split_line[0]
-            name = split_line[1]
-            team = split_line[2]
+    with open(os.path.join(folder, abbreviations)) as abb_file:
+        for line in abb_file.read().split("\n"):
+            abbreviation, name, team = line.split("_")
             pilots[abbreviation] = (name, team,)
-    with open(f"{folder}/end.log") as end:
-        for line in end.read().split("\n"):
+    with open(os.path.join(folder, end))as end_file:
+        for line in end_file.read().split("\n"):
             abbreviation = line[:3]
             end_datetime = line[3:]
             lap_times[abbreviation] = datetime.datetime.fromisoformat(end_datetime)
-    with open(f"{folder}/start.log") as start:
-        for line in start.read().split("\n"):
+    with open(os.path.join(folder, start)) as start_file:
+        for line in start_file.read().split("\n"):
             abbreviation = line[:3]
             start_datetime = line[3:]
             lap_times[abbreviation] -= datetime.datetime.fromisoformat(start_datetime)
     sorted_laps = list(lap_times.items())
     sorted_laps.sort(key=lambda i: i[1])
-    for i in range(len(sorted_laps)):
-        position = i + 1
-        name = pilots[sorted_laps[i][0]][0]
-        team = pilots[sorted_laps[i][0]][1]
-        fastest_lap = str(sorted_laps[i][1])[3:-3]
-        if i == 15:
-            report.append("--------------------------------------------------------------------")
-            report.append((position, name, team, fastest_lap,))
-        else:
-            report.append((position, name, team, fastest_lap,))
-    if driver:
-        return [line for line in report if line[1] == driver]
-    elif desc:
-        report.reverse()
-        return report
+    for position, abbr_time_tuple in enumerate(sorted_laps, 1):
+        abbreviation, lap_time = abbr_time_tuple
+        name, team = pilots[abbreviation]
+        fastest_lap = format_delta(lap_time)
+        report.append(PilotStats(position, name, team, fastest_lap))
+    return report
+
+
+def format_delta(timedelta):
+    if timedelta.microseconds == 0:
+        mic = "000"
     else:
-        return report
+        mic = str(timedelta)[-6:-3]
+    sec = timedelta.seconds
+    minutes, seconds = divmod(sec, 60)
+    string = "{}:{}.{:>3}".format(minutes, seconds, mic)
+    return string
 
 
-def print_report(report):
+def print_report(report, driver=None, desc=False):
     """
     Print report to stdout
 
     :param report: report of qualification result
+    :param driver: name of driver whose statistic you wish to show
+    :param desc: order descending
     :return: None
     """
-    for line in report:
-        if not isinstance(line, tuple):
+    if len(report) > 15:
+        separator = "---------------------------------------------------------------------"
+        report.insert(15, separator)
+    if driver:
+        printer = [line for line in report if line.name == driver]
+    elif desc:
+        printer = [line for line in report[::-1]]
+    else:
+        printer = report
+    for line in printer:
+        if not isinstance(line, PilotStats):
             print(line)
         else:
-            position, name, team, time = line
-            print("{:>2}. {:<20}| {:<30}| {}".format(position, name, team, time))
+            print("{:>2}. {:<20}| {:<30}| {}".format(line.position, line.name,
+                                                     line.team, line.fastest_lap))
 
 
-def inp():
+def input_from_argparse():
     """
     Parse args from command line
 
@@ -91,9 +112,9 @@ def main():
 
     :return: none
     """
-    args = inp()
-    report = build_report(args.file, args.driver, args.desc)
-    print_report(report)
+    args = input_from_argparse()
+    report = build_report(args.file)
+    print_report(report, args.driver, args.desc)
 
 
 if __name__ == "__main__":

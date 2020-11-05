@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class PilotStats:
+    abbreviation: str
     position: int
     name: str
     team: str
@@ -18,26 +19,26 @@ end = "end.log"
 start = "start.log"
 
 
-def build_report(folder):
+def build_report(file):
     """
     Take params and returned report of qualification
 
-    :param folder: folder path
+    :param file: folder path
     :return: report list
     """
     pilots = {}
     lap_times = {}
     report = []
-    with open(os.path.join(folder, abbreviations)) as abb_file:
+    with open(os.path.join(file, abbreviations)) as abb_file:
         for line in abb_file.read().split("\n"):
             abbreviation, name, team = line.split("_")
             pilots[abbreviation] = (name, team,)
-    with open(os.path.join(folder, end))as end_file:
+    with open(os.path.join(file, end))as end_file:
         for line in end_file.read().split("\n"):
             abbreviation = line[:3]
             end_datetime = line[3:]
             lap_times[abbreviation] = datetime.datetime.fromisoformat(end_datetime)
-    with open(os.path.join(folder, start)) as start_file:
+    with open(os.path.join(file, start)) as start_file:
         for line in start_file.read().split("\n"):
             abbreviation = line[:3]
             start_datetime = line[3:]
@@ -48,7 +49,7 @@ def build_report(folder):
         abbreviation, lap_time = abbr_time_tuple
         name, team = pilots[abbreviation]
         fastest_lap = format_delta(lap_time)
-        report.append(PilotStats(position, name, team, fastest_lap))
+        report.append(PilotStats(abbreviation, position, name, team, fastest_lap))
     return report
 
 
@@ -72,15 +73,18 @@ def print_report(report, driver=None, desc=False):
     :param desc: order descending
     :return: None
     """
-    if len(report) > 15:
-        separator = "---------------------------------------------------------------------"
-        report.insert(15, separator)
+    separator = "---------------------------------------------------------------------"
     if driver:
         printer = [line for line in report if line.name == driver]
     elif desc:
         printer = [line for line in report[::-1]]
     else:
         printer = report
+    if len(printer) > 15:
+        if desc:
+            printer.insert(-15, separator)
+        else:
+            printer.insert(15, separator)
     for line in printer:
         if not isinstance(line, PilotStats):
             print(line)
@@ -89,20 +93,22 @@ def print_report(report, driver=None, desc=False):
                                                      line.team, line.fastest_lap))
 
 
-def input_from_argparse():
+def input_from_argparse(cl_args):
     """
     Parse args from command line
 
     :return: args
     """
-    arguments = ['--' + arg if arg == "driver" else arg for arg in sys.argv[1:]]
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
+    subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands',
+                                       help='Name of driver whose statistics you wish to watch')
     parser.add_argument("-f", "--file", type=str, help="Folder path")
+    parser_driver = subparsers.add_parser("driver", help="Name")
+    parser_driver.add_argument("driver", type=str)
     group.add_argument("--asc", action="store_true", help="Order by time asc")
     group.add_argument("--desc", action="store_true", help="Order by time desc")
-    parser.add_argument("--driver", help="Enter name of driver", type=str)
-    args = parser.parse_args(arguments)
+    args = parser.parse_args(cl_args)
     return args
 
 
@@ -112,9 +118,12 @@ def main():
 
     :return: none
     """
-    args = input_from_argparse()
+    args = input_from_argparse(sys.argv[1:])
     report = build_report(args.file)
-    print_report(report, args.driver, args.desc)
+    if "driver" in args:
+        print_report(report, driver=args.driver)
+    else:
+        print_report(report, desc=args.desc)
 
 
 if __name__ == "__main__":

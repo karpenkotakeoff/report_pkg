@@ -12,11 +12,11 @@ DRR2018-05-24_12:12:36.080"""
 start = """SVF2018-05-24_12:02:58.917
 DRR2018-05-24_12:11:24.067
 LHM2018-05-24_12:18:20.125"""
-report = [report_pkg.PilotStats(position=1, name='Daniel Ricciardo',
+report = [report_pkg.PilotStats(abbreviation="DRR", position=1, name='Daniel Ricciardo',
                                 team='RED BULL RACING TAG HEUER', fastest_lap='1:12.013'),
-          report_pkg.PilotStats(position=2, name='Sebastian Vettel',
+          report_pkg.PilotStats(abbreviation="SVF", position=2, name='Sebastian Vettel',
                                 team='FERRARI', fastest_lap='1:12.415'),
-          report_pkg.PilotStats(position=3, name='Lewis Hamilton',
+          report_pkg.PilotStats(abbreviation="LHM", position=3, name='Lewis Hamilton',
                                 team='MERCEDES', fastest_lap='1:12.460')]
 reversed_report = report[::-1]
 print_asc = [
@@ -34,10 +34,9 @@ def test_typical_build_report():
 
 
 def test_argparse():
-    with mock.patch("argparse.ArgumentParser.parse_args",
-                    return_value=argparse.Namespace(asc=True, desc=False, driver=None, file="data")):
-        res = report_pkg.input_from_argparse()
-        assert res == argparse.Namespace(asc=True, desc=False, driver=None, file="data")
+    a = ["--file", "data", "driver", "Sebastian Vettel"]
+    assert report_pkg.input_from_argparse(a) == argparse.Namespace(asc=False, desc=False,
+                                                                   driver="Sebastian Vettel", file="data")
 
 
 @pytest.mark.parametrize("params, expected", [

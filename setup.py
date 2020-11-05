@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="report_pkg_Karpenko",
-    version="0.0.2",
+    version="0.0.4",
     author="Viktor Karpenko",
     author_email="karpenkotakeoff@gmail.com",
     description="Create report from raw data F1",

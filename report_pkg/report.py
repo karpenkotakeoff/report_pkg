@@ -11,7 +11,7 @@ class PilotStats:
     position: int
     name: str
     team: str
-    fastest_lap: str
+    fastest_lap: datetime.timedelta
 
 
 abbreviations = "abbreviations.txt"
@@ -48,7 +48,7 @@ def build_report(file):
     for position, abbr_time_tuple in enumerate(sorted_laps, 1):
         abbreviation, lap_time = abbr_time_tuple
         name, team = pilots[abbreviation]
-        fastest_lap = format_delta(lap_time)
+        fastest_lap = lap_time
         report.append(PilotStats(abbreviation, position, name, team, fastest_lap))
     return report
 
@@ -90,7 +90,7 @@ def print_report(report, driver=None, desc=False):
             print(line)
         else:
             print("{:>2}. {:<20}| {:<30}| {}".format(line.position, line.name,
-                                                     line.team, line.fastest_lap))
+                                                     line.team, format_delta(line.fastest_lap)))
 
 
 def input_from_argparse(cl_args):

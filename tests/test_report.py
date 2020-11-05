@@ -1,6 +1,7 @@
 import pytest
 import argparse
 import report_pkg
+import datetime
 from unittest import mock
 
 abbreviations = """DRR_Daniel Ricciardo_RED BULL RACING TAG HEUER
@@ -12,12 +13,15 @@ DRR2018-05-24_12:12:36.080"""
 start = """SVF2018-05-24_12:02:58.917
 DRR2018-05-24_12:11:24.067
 LHM2018-05-24_12:18:20.125"""
-report = [report_pkg.PilotStats(abbreviation="DRR", position=1, name='Daniel Ricciardo',
-                                team='RED BULL RACING TAG HEUER', fastest_lap='1:12.013'),
-          report_pkg.PilotStats(abbreviation="SVF", position=2, name='Sebastian Vettel',
-                                team='FERRARI', fastest_lap='1:12.415'),
-          report_pkg.PilotStats(abbreviation="LHM", position=3, name='Lewis Hamilton',
-                                team='MERCEDES', fastest_lap='1:12.460')]
+report = [report_pkg.PilotStats(abbreviation="DRR", position=1,
+                                name='Daniel Ricciardo', team='RED BULL RACING TAG HEUER',
+                                fastest_lap=datetime.timedelta(seconds=72, microseconds=13000)),
+          report_pkg.PilotStats(abbreviation="SVF", position=2,
+                                name='Sebastian Vettel', team='FERRARI',
+                                fastest_lap=datetime.timedelta(seconds=72, microseconds=415000)),
+          report_pkg.PilotStats(abbreviation="LHM", position=3,
+                                name='Lewis Hamilton', team='MERCEDES',
+                                fastest_lap=datetime.timedelta(seconds=72, microseconds=460000))]
 reversed_report = report[::-1]
 print_asc = [
     mock.call(" 1. Daniel Ricciardo    | RED BULL RACING TAG HEUER     | 1:12.013"),

@@ -73,24 +73,23 @@ def print_report(report, driver=None, desc=False):
     :param desc: order descending
     :return: None
     """
-    separator = "---------------------------------------------------------------------"
+    separator = "-" * 70
     if driver:
         printer = [line for line in report if line.name == driver]
     elif desc:
-        printer = [line for line in report[::-1]]
+        separator_line_num = -15
+        printer = report[::-1]
+        printer.insert(separator_line_num, separator)
     else:
-        printer = report
-    if len(printer) > 15:
-        if desc:
-            printer.insert(-15, separator)
-        else:
-            printer.insert(15, separator)
+        separator_line_num = 15
+        printer = report[:]
+        printer.insert(separator_line_num, separator)
     for line in printer:
-        if not isinstance(line, PilotStats):
-            print(line)
-        else:
+        if isinstance(line, PilotStats):
             print("{:>2}. {:<20}| {:<30}| {}".format(line.position, line.name,
                                                      line.team, format_delta(line.fastest_lap)))
+        else:
+            print(line)
 
 
 def input_from_argparse(cl_args):
